@@ -10,7 +10,7 @@ public class Document
 		HTML("html"), 
 		PDF("pdf");
 		
-		private String mi_name;
+		private final String mi_name;
 		
 		private DocumentFormat(String name)
 		{

@@ -21,7 +21,7 @@ public class Candidate
 		TEST_SITUATION("candidate_test_situation"),
 		URL("url");
 		
-		final String mi_keyName;
+		private final String mi_keyName;
 		
 		private Params(String keyName)
 		{

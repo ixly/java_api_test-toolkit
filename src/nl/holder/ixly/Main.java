@@ -28,7 +28,7 @@ public class Main
 	
 	private static HttpResponse<JsonNode> credentialsCheck() throws UnirestException, UnsupportedEncodingException
 	{
-		// For an example per entity (eg. Candidate) see the main method of the corresponding manager
+		// For an example per entity (eg. Candidate) see the main method of the corresponding manager (eg. CandidateManager)
 		
 		return null;
 	}

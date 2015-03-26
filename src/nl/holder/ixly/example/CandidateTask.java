@@ -4,8 +4,8 @@ import nl.holder.ixly.net.Resource;
 
 public class CandidateTask 
 {
-	private String m_apiCandidateIdentiefier;
-	private String m_apiCandidateTaskIdentifier;
+	private final String m_apiCandidateIdentiefier;
+	private final String m_apiCandidateTaskIdentifier;
 	
 	public CandidateTask(String apiCandidateIdentiefier, String apiCandidateTaskIdentifier)
 	{
