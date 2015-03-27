@@ -1,5 +1,6 @@
 package nl.holder.ixly.example;
 
+import java.io.InputStream; 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -14,9 +15,14 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.GetRequest;
 
+import nl.holder.ixly.file.ReportIF;
 import nl.holder.ixly.net.QueryString;
 import nl.holder.ixly.net.Web;
+import nl.holder.ixly.net.resource.Candidate;
+import nl.holder.ixly.net.resource.CandidateTask;
+import nl.holder.ixly.net.resource.Task;
 import nl.holder.ixly.net.security.Credentials;
+import nl.holder.ixly.util.FileUtil.FileExtension;
 
 public class CandidateTaskManager 
 {
@@ -29,21 +35,180 @@ public class CandidateTaskManager
 		return null;
 	}
 	
-	public static CandidateTask create(Credentials credentials)
+	public static ReportIF defaultReport(CandidateTask candidateTask, FileExtension format)
+	{
+		try 
+		{
+			final String candidateTaskWithdrawUrl;
+			final GetRequest getRequest;
+			final HttpResponse<InputStream> response;
+			
+			final String apiCandidateIdentifier;
+			final String apiCandidateTaskKey;
+			
+			final Credentials credentials;
+			
+			apiCandidateIdentifier = candidateTask.getApiId();
+			apiCandidateTaskKey = candidateTask.getApiCandidateTaskId();
+			
+			candidateTaskWithdrawUrl = String.format("%s/candidates/%s/candidate_tasks/%s/default_report%s", Web.BASE_URL, apiCandidateIdentifier, apiCandidateTaskKey, format.getExtension());
+			getRequest = Unirest.get(candidateTaskWithdrawUrl);
+			
+			credentials = candidateTask.getCredentials();
+			
+			if(credentials.getUsername() != null && credentials.getPassword() != null)
+			{
+				getRequest.basicAuth(credentials.getUsername(), credentials.getPassword());
+			}
+
+			response = getRequest.asBinary();
+			
+			if(response == null)
+			{
+				return null;
+			}
+			
+			return convertToReport(response, format);
+		} 
+		catch (UnirestException e) 
+		{
+			return null;
+		}
+	}
+	
+	private static ReportIF convertToReport(HttpResponse response, FileExtension format)
+	{
+		if(format == FileExtension.HTML)
+		{
+			return new HtmlReport(response);
+		}
+		
+		if(format == FileExtension.JSON)
+		{
+			return new JsonReport(response);
+		}
+		
+		if(format == FileExtension.PDF)
+		{
+			return new PdfReport(response);
+		}
+		
+		return null;
+	}
+	
+	public static boolean destroy(CandidateTask candidateTask)
+	{
+		return withdraw(candidateTask);
+	}
+	
+	public static boolean withdraw(CandidateTask candidateTask)
+	{
+		final String candidateTaskWithdrawUrl;
+		final GetRequest getRequest;
+		final HttpResponse<JsonNode> response;
+		
+		final String apiCandidateIdentifier;
+		final String apiCandidateTaskKey;
+		
+		final Credentials credentials;
+		
+		apiCandidateIdentifier = candidateTask.getApiId();
+		apiCandidateTaskKey = candidateTask.getApiCandidateTaskId();
+		
+		candidateTaskWithdrawUrl = String.format("%s/candidates/%s/candidate_tasks/%s/withdraw", Web.BASE_URL, apiCandidateIdentifier, apiCandidateTaskKey);
+		getRequest = Unirest.get(candidateTaskWithdrawUrl);
+		
+		credentials = candidateTask.getCredentials();
+		
+		if(credentials.getUsername() != null && credentials.getPassword() != null)
+		{
+			getRequest.basicAuth(credentials.getUsername(), credentials.getPassword());
+		}
+		
+		try 
+		{
+			final JSONObject jsonObject;
+				
+			response = getRequest.asJson();
+			jsonObject = response.getBody().getObject();
+			
+			if(jsonObject == null || jsonObject.has("message"))
+			{
+				return true;
+			}
+		} 
+		catch (UnirestException e) 
+		{
+			return false;
+		}
+		
+		return false;
+	}
+	
+	public static void destroy(Candidate candidate)
+	{
+		CandidateManager.destroy(candidate);	
+	}
+	
+	public static CandidateTask status(CandidateTask candidateTask)
+	{
+		final String candidateTaskStatusUrl;
+		final GetRequest getRequest;
+		final HttpResponse<JsonNode> response;
+		
+		final String apiCandidateIdentifier;
+		final String apiCandidateTaskKey;
+		
+		final Credentials credentials;
+		
+		apiCandidateIdentifier = candidateTask.getApiId();
+		apiCandidateTaskKey = candidateTask.getApiCandidateTaskId();
+		
+		candidateTaskStatusUrl = String.format("%s/candidates/%s/candidate_tasks/%s/status", Web.BASE_URL, apiCandidateIdentifier, apiCandidateTaskKey);
+		getRequest = Unirest.get(candidateTaskStatusUrl);
+		
+		credentials = candidateTask.getCredentials();
+		
+		if(credentials.getUsername() != null && credentials.getPassword() != null)
+		{
+			getRequest.basicAuth(credentials.getUsername(), credentials.getPassword());
+		}
+		
+		try 
+		{
+			final JSONObject jsonObject;
+				
+			response = getRequest.asJson();
+			jsonObject = response.getBody().getObject();
+			
+			if(jsonObject == null || jsonObject.has("message"))
+			{
+				return null;
+			}
+		} 
+		catch (UnirestException e) 
+		{
+			return null;
+		}
+		
+		return convertToCandidateTask(credentials, response);
+	}
+	
+	public static CandidateTask create(Credentials credentials, Task task)
 	{
 		final String taskListUrl;
 		final GetRequest getRequest;
 		final HttpResponse<JsonNode> response;
 		
 		final String apiCandidateIdentifier;
-		final String apiTaskKey;
+		final String apiCandidateTaskId;
 		
 		final QueryString queryString;
 
 		apiCandidateIdentifier = getApiIdentifier(credentials);
-		apiTaskKey = getApiIdentifier(credentials);
+		apiCandidateTaskId = getApiIdentifier(credentials);
 		
-		taskListUrl = String.format("%s/candidates/%s/candidate_tasks/%s", Web.BASE_URL, apiCandidateIdentifier, apiTaskKey);
+		taskListUrl = String.format("%s/candidates/%s/candidate_tasks/%s", Web.BASE_URL, apiCandidateIdentifier, apiCandidateTaskId);
 		getRequest = Unirest.get(taskListUrl);
 		
 		if(credentials.getUsername() != null && credentials.getPassword() != null)
@@ -52,7 +217,7 @@ public class CandidateTaskManager
 		}
 		
 		queryString = new QueryString();
-		queryString.add("task_key", apiTaskKey);
+		queryString.add("task_key", task.getTaskKey());
 		
 		if(queryString != null)
 		{
@@ -79,7 +244,18 @@ public class CandidateTaskManager
 			return null;
 		}
 		
-		return null;
+		return convertToCandidateTask(credentials, response);
+	}
+	
+	private static CandidateTask convertToCandidateTask(Credentials credentials, HttpResponse<JsonNode> response)
+	{
+		final JsonNode node;
+		final JSONObject obj;
+		
+		node = response.getBody();
+		obj = node.getObject();
+		
+		return new CandidateTask(credentials, obj);
 	}
 	
 	public static List<Task> list(Credentials credentials)
@@ -214,8 +390,11 @@ public class CandidateTaskManager
 		final Credentials credentials;
 		final Candidate candidate;
 		final CandidateTask newCandidateTask;
+		final CandidateTask statusCheckCandidateTask;
 		final List<CandidateTask> candidateTaskList;
 		final List<Task> allAvailableTaskList;
+		final Task task;
+		ReportIF report;
 		
 		// Credentials
 		basicAuthUsername = "jeroen+apitk@holder.nl";
@@ -230,11 +409,20 @@ public class CandidateTaskManager
 		candidate = CandidateManager.create(credentials);
 		candidateTaskList = CandidateTaskManager.list(candidate);
 		
-		CandidateManager.destroy(candidate);
+		task = allAvailableTaskList.get(0);
 		
-		newCandidateTask = CandidateTaskManager.create(credentials);
-		System.out.println();
+		// Create a new candidate task
+		newCandidateTask = CandidateTaskManager.create(credentials, task);
 		
+		// Possible solution:
+		// Do the test at.. newCandidateTask.getUrl();
+		// Check the status of a candidateTask
+		 statusCheckCandidateTask = CandidateTaskManager.status(newCandidateTask);
+		// Check for the state and poll every 10 sec or so
 		
+	    // Get default report
+	    report = CandidateTaskManager.defaultReport(statusCheckCandidateTask, FileExtension.JSON);
+	    report = CandidateTaskManager.defaultReport(statusCheckCandidateTask, FileExtension.HTML);
+	    report = CandidateTaskManager.defaultReport(statusCheckCandidateTask, FileExtension.PDF);
 	}
 }

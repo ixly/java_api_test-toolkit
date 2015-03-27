@@ -12,6 +12,7 @@ import com.mashape.unirest.request.GetRequest;
 
 import nl.holder.ixly.net.QueryString;
 import nl.holder.ixly.net.Web;
+import nl.holder.ixly.net.resource.Candidate;
 import nl.holder.ixly.net.security.Credentials;
 
 public final class CandidateManager 
