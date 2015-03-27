@@ -20,7 +20,7 @@ public class FileUtil
 		
 		public String getExtension()
 		{
-			return "." + this.toString();
+			return "." + this.toString().toLowerCase();
 		}
 	}
 	

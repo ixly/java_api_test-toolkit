@@ -24,7 +24,7 @@ public class JsonReport
 	@Override
 	public void saveTo(File destination)
 	{
-		FileUtil.writeTo(new File(destination, getExtension()), mi_response.getRawBody());
+		FileUtil.writeTo(new File(destination.getAbsolutePath() + getExtension()), mi_response.getRawBody());
 	}
 
 	@Override

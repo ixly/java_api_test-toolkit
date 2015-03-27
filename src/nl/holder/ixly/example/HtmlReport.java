@@ -21,7 +21,7 @@ public class HtmlReport
 	@Override
 	public void saveTo(File destination)
 	{
-		FileUtil.writeTo(new File(destination, getExtension()), m_response.getRawBody());
+		FileUtil.writeTo(new File(destination.getAbsolutePath() + getExtension()), m_response.getRawBody());
 	}
 
 	@Override
