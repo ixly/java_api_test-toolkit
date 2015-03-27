@@ -417,7 +417,7 @@ public class CandidateTaskManager
 		// Possible solution:
 		// Do the test at.. newCandidateTask.getUrl();
 		// Check the status of a candidateTask
-		 statusCheckCandidateTask = CandidateTaskManager.status(newCandidateTask);
+		statusCheckCandidateTask = CandidateTaskManager.status(newCandidateTask);
 		// Check for the state and poll every 10 sec or so
 		
 	    // Get default report
